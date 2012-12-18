@@ -1,7 +1,12 @@
 package cpmobile.core;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.Serializable;
 
 public final class Train implements Serializable {
+	
+	private static final long serialVersionUID = 3629626263929217422L;
+	
 	private String _type;
 	private String _timeDepart;
 	private String _timeArrival;
@@ -28,13 +33,13 @@ public final class Train implements Serializable {
 	// [0] - Type of train
 	// [1] - time of Departure [HH:MM]
 	// [2] - time of Arrival [HH:MM]
-	protected String[] getDescription() {
-		String[] res = new String[3];
+	protected List<String> getDescription() {
+		List<String> array = new ArrayList<String>(3);
 
-		res[0] = _type;
-		res[1] = _timeDepart;
-		res[2] = _timeArrival;
+		array.add(_type);
+		array.add(_timeDepart);
+		array.add(_timeArrival);
 
-		return res;
+		return array;
 	}
 }
