@@ -1,13 +1,5 @@
 package cpmobile.core;
-import java.io.ObjectInputStream;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.IOException;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ArrayList;
@@ -44,13 +36,13 @@ public final class CPManager {
 	// ALL LONG COURSE IN PORTUGAL (Lisboa-Oriente,Lisboa-Santa Apolónia,...\n)
 	// ALL URBAN IN LISBON
 	// ALL URBAN IN PORTO
-	public static CPManager createDB(String file) {
+	public static CPManager createDB(String stationFile, String saveFile) {
 		LinkedList<String[]> station = new LinkedList<String[]>();
 		HashMap<String, Route> db = new HashMap<String, Route>();
 
 		// Parsing file
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(file));
+			BufferedReader in = new BufferedReader(new FileReader(stationFile));
 			String s;
 
 			while ((s = in.readLine()) != null) {
@@ -59,8 +51,8 @@ public final class CPManager {
 
 			in.close();
 		}
-		catch (FileNotFoundException e) { System.err.println("Error: file " + file + " not found!"); }
-		catch (IOException e) { System.err.println("Error: can't read from " + file + "!"); }
+		catch (FileNotFoundException e) { System.err.println("Error: file " + stationFile + " not found!"); }
+		catch (IOException e) { System.err.println("Error: can't read from " + stationFile + "!"); }
 
 		// Generating timetables
 		try {
@@ -121,13 +113,25 @@ public final class CPManager {
 							db.put(group[0] + group[1], r);
 						}
 					}
-
-				return new CPManager(db, (String[][]) station.toArray());
 			}
 		}
 		catch (IOException e) { e.printStackTrace(); }
 
-		return null;
+		try {
+			CPManager man = new CPManager(db, (String[][]) station.toArray());
+			ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(saveFile)));
+
+			out.writeObject(man);
+			out.flush();
+			out.close();
+
+			return man;
+		}
+		catch (IOException e) { System.err.println("Error: Can't write to " + saveFile + "!"); }
+
+		finally {
+			return null;
+		}
 	}
 
 	// Loads database from file 
