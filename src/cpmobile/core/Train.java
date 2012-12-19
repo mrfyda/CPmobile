@@ -42,4 +42,19 @@ public final class Train implements Serializable {
 
 		return array;
 	}
+	
+	// _timeDepart.hashCode() * 31 + _timeArrival.hashCode() * 17 + _type.hashCode()
+	public int hashCode() {
+		return (_timeDepart.hashCode() << 5) - _timeDepart.hashCode() + (_timeArrival.hashCode() << 4) + _timeArrival.hashCode() + _type.hashCode();
+	}
+	
+	public boolean equals(Object o) {
+		if ((o != null) && (o instanceof Train)) {
+			Train t = (Train) o;
+		
+			return _timeDepart.equals(t.getTimeDepart()) && _timeArrival.equals(t.getTimeArrival()) && _type.equals(t.getType());
+		}
+		
+		return false;
+	}
 }

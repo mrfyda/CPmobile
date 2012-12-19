@@ -9,15 +9,19 @@ public final class CPManager implements Serializable {
 
 	private static final long serialVersionUID = 924866340298005552L;
 
-	private static final String PATTERN = "\\s*<td align=\"center\">(.?\\d?\\dh\\d\\d|\\w?\\w)</td>";
+	private static final int LINE_INIT_PARSE = 472;
+	private static final String PATTERN = "\\s*<td align=\"center\">(\\*?\\d?\\dh\\d\\d|\\w?\\w)</td>";
+	private static final String PATTERN2 = "\\s*<td align=\"center\">(\\w?\\w)<b class=\"orange\">\\|</b>(\\w?\\w)</td>";
 	
 	public static final String TYPE_ALL = "";
-	public static final String TYPE_ALFA = "AL";
+	public static final String TYPE_ALFA = "AP";
 	public static final String TYPE_IC = "IC";
 	public static final String TYPE_R = "R";
+	public static final String TYPE_U = "U";
+	
 	public static final String TIME_ALL = "";
 
-	public Map<String, Route> _db;
+	private Map<String, Route> _db;
 	private List<List<String>> _station;
 
 	private CPManager(Map<String, Route> db, List<List<String>> station) {
@@ -41,7 +45,8 @@ public final class CPManager implements Serializable {
 	}
 
 	private boolean validateType(String type) {
-		return (type != null) && (type.equals(TYPE_ALL) || type.equals(TYPE_ALFA) || type.equals(TYPE_IC) || type.equals(TYPE_R));
+		return (type != null) && 
+				(type.equals(TYPE_ALL) || type.contains(TYPE_ALFA) || type.contains(TYPE_IC) || type.contains(TYPE_R) || type.contains(TYPE_U));
 	}
 
 	private boolean validateDay(int day) {
@@ -69,7 +74,7 @@ public final class CPManager implements Serializable {
 	private static Route createRoute(String s1, String s2) {
 		URL url = null;
 		List<String> res = new LinkedList<String>(); // Temporary list to keep timetables of each route
-		Route r = new Route(s1, s2);
+		Route r = new Route();
 		
 		try {
 			url = new URL("http://www.cp.pt/cp/searchTimetable.do");
@@ -90,22 +95,31 @@ public final class CPManager implements Serializable {
 				OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
 	
 				if (isWeekend == 0) 
-					writer.write("depart=" + s1 + "&arrival=" + s2 + "&date=2012-12-17&timeType=Partida&time=&regionals=regionals&returnDate=&returnTimeType=Partida&returnTime=");
+					writer.write("depart=" + s1 + "&arrival=" + s2 + "&date=2012-12-17&timeType=Partida&time=&allServices=allServices&returnDate=&returnTimeType=Partida&returnTime=");
 				else
-					writer.write("depart=" + s1 + "&arrival=" + s2 + "&date=2012-12-15&timeType=Partida&time=&regionals=regionals&returnDate=&returnTimeType=Partida&returnTime=");
+					writer.write("depart=" + s1 + "&arrival=" + s2 + "&date=2012-12-15&timeType=Partida&time=&allServices=allServices&returnDate=&returnTimeType=Partida&returnTime=");
 				
 				writer.flush();
 	
 				// Reading answer
+				LineNumberReader reader = new LineNumberReader(new InputStreamReader(conn.getInputStream()));
 				String line;
-				BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	
-				// Parsing answer
-				while ((line = reader.readLine()) != null)					
-				    if (line.matches(PATTERN))
+				
+				reader.setLineNumber(LINE_INIT_PARSE);
+				
+				// Parsing answer				
+				while ((line = reader.readLine()) != null) {				
+				    if (line.matches(PATTERN2))
+				    	res.add(line.replaceFirst(PATTERN2, "$1|$2"));
+				    else if (line.matches(PATTERN))
 				    	res.add(line.replaceFirst(PATTERN, "$1"));
+				}
 			}
 			catch (IOException e) { System.err.println("Error: Can't read from file!"); }
+			
+			// Input is always a multiple of 4 [Type, TimeDepart, TimeArrival, DiffTime]
+			if ((res.size() == 0) || (res.size() % 4 != 0))
+				return null;
 
 			// For each existing train, insert in route
 			Iterator<String> it;
@@ -130,13 +144,19 @@ public final class CPManager implements Serializable {
 		List<List<String>> station = new LinkedList<List<String>>();
 		Map<String, Route> db = new HashMap<String, Route>();
 
-		// Parsing file
+		// Parsing and preparing strings in stationFile
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(stationFile));
-			String s;
+			String line;
 
-			while ((s = in.readLine()) != null)
-				station.add(Arrays.asList(s.split(",")));
+			while ((line = in.readLine()) != null) {
+				List<String> lst = new ArrayList<String>();
+				
+				for (String s : Arrays.asList(line.split(",")))
+					lst.add(s.toLowerCase());
+				
+				station.add(lst);
+			}
 
 			in.close();
 		}
@@ -144,31 +164,42 @@ public final class CPManager implements Serializable {
 		catch (IOException e) { System.err.println("Error: can't read from " + stationFile + "!"); }
 
 		// Generating timetables
-		for (List<String> group : station)
+		for (List<String> group : station) {
 			// For each element compares with all the others
-			for (String first : group)
-				for (String second : group) {
+			int jLength = group.size();
+			int iLength = jLength - 1;
+			
+			for (int i = 0; i < iLength; ++i) {
+				String first = group.get(i);
+				
+				for (int j = i + 1; j < jLength; ++j) {
+					String second = group.get(j);
+					
 					// In case this route was already processed
 					if (first.equals(second) || db.containsKey(first + second))
 						continue;
 					
-					db.put(keygen(first, second), createRoute(first, second));
-					db.put(keygen(second, first), createRoute(second, first));
+					// Manipulate strings to fit HTTP POST
+					String f = first.replace(' ', '+');
+					String s = second.replace(' ', '+');
+					
+					// HTTP POST
+					Route r1 = createRoute(f, s);
+					Route r2 = createRoute(s, f);
+					
+					// Verifying if all went OK
+					if ((r1 != null) && (r2 != null)) {
+						db.put(keygen(first, second), r1);
+						db.put(keygen(second, first), r2);
+					} else
+						System.err.println("Error: " + first + " -> " + second + " not supported!");
 				}
-
-		try {
-			CPManager man = new CPManager(db, station);
-			ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(saveFile)));
-
-			out.writeObject(man);
-			out.flush();
-			out.close();
-
-			return man;
+			}
 		}
-		catch (IOException e) { System.err.println("Error: Can't write to " + saveFile + "!"); }
+		
+		CPManager man = new CPManager(db, station);
 
-		return null;
+		return saveDB(man, saveFile) ? man : null;
 	}
 
 	// Loads database from file 
@@ -188,6 +219,21 @@ public final class CPManager implements Serializable {
 
 		return null;
 	}
+	
+	private static boolean saveDB(CPManager man, String file) {
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+
+			out.writeObject(man);
+			out.flush();
+			out.close();
+
+			return true;
+		}
+		catch (IOException e) { System.err.println("Error: Can't write to " + file + "!"); }
+		
+		return false;
+	}
 
 	// Verifies all parameters before query the database
 	// Returns the specified route timetable if exists
@@ -205,8 +251,11 @@ public final class CPManager implements Serializable {
 	// String[0][1] = HH:MM (time of Departure)
 	// String[0][2] = HH:MM (time of Arrival)
 	public List<List<String>> query(String depart, String arrival, String type, int day, String time) {
+		depart = depart.toLowerCase();
+		arrival = arrival.toLowerCase();
+		
 		if (validateStation(depart) && validateStation(arrival) && validateType(type) && validateDay(day) && validateTime(time)) {
-			Route r = _db.get(depart + arrival);
+			Route r = _db.get(keygen(depart, arrival));
 
 			if (r != null)
 				return r.getTimetable(day, type, time);

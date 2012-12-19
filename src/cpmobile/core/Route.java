@@ -6,24 +6,20 @@ public final class Route implements Serializable {
 
 	private static final long serialVersionUID = 7694179989395756214L;
 	
-	private String _depart; // Departure station
-	private String _arrival; // Arrival station
-	private LinkedList<Train> _weekTime; // Timetable for week
-	private LinkedList<Train> _weekendTime; // Timetable for weekends and holidays
+	private List<Train> _weekTime; // Timetable for week
+	private List<Train> _weekendTime; // Timetable for weekends and holidays
 
-	protected Route(String depart, String arrival) {
-		_depart = depart;
-		_arrival = arrival;
+	protected Route() {
 		_weekTime = new LinkedList<Train>();
 		_weekendTime = new LinkedList<Train>();
 	}
-
-	protected String getDepart() {
-		return _depart;
+	
+	protected List<Train> getWeek() {
+		return _weekTime;
 	}
-
-	protected String getArrival() {
-		return _arrival;
+	
+	protected List<Train> getWeekend() {
+		return _weekendTime;
 	}
 
 	// Days are represented as [0, 7] where 7 means holiday
@@ -86,21 +82,22 @@ public final class Route implements Serializable {
 		return res;
 	}
 
+	// weekTime.hashcode() * 31 + weekendTime.hashCode()
 	public int hashCode() {
-		return _depart.hashCode() * 11 + _arrival.hashCode();
+		return (_weekTime.hashCode() << 5) - _weekTime.hashCode() + _weekendTime.hashCode();
 	}
 
 	public boolean equals(Object other) {
 		if ((other != null) && (other instanceof Route)) {
 			Route r = (Route) other;
 
-			return 	_depart == r.getDepart() && _arrival == r.getArrival();
+			return 	_weekTime.equals(r.getWeek()) && _weekendTime.equals(r.getWeekend());
 		}
 
 		return false;
 	}
 	
 	public String toString() {
-		return "Departure: " + _depart + "\nArrival: " + _arrival + "\nNWeek: " + _weekTime.size() + "\nNWeekend: " + _weekendTime.size();
+		return "NWeek: " + _weekTime.size() + "\nNWeekend: " + _weekendTime.size();
 	}
 }
