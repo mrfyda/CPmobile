@@ -1,5 +1,7 @@
 *.class
 *.txt
+.classpath
+.project
 !estacoes.txt
 *.dat
 
