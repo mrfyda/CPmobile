@@ -23,5 +23,7 @@ public abstract class WebService {
 		
 		return str.toString();
 	}
+	
+	public abstract Object execute();
 
 }
