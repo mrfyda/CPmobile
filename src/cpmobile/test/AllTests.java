@@ -2,6 +2,7 @@ package cpmobile.test;
 import java.util.List;
 
 import cpmobile.core.*;
+import cpmobile.core.web.StationsRetriever;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,6 +56,17 @@ public class AllTests {
 		
 		assertNotNull(lst);
 		assertEquals(20, lst.size());
+	}
+	
+	@Test
+	public void TestWebService() {
+		System.out.println("TestWebService");
+		StationsRetriever sr = new StationsRetriever();
+		List<Station> stations = sr.execute();
+		
+		assertNotNull(stations);
+		assertEquals("abrantes", stations.get(0).getName());
+		assertEquals("zibreira", stations.get(stations.size()-1).getName());
 	}
 
 	@Test
