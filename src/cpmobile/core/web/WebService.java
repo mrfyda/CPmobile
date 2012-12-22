@@ -2,31 +2,28 @@ package cpmobile.core.web;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import java.net.URL;
+import java.net.URLConnection;
 
 public abstract class WebService {
 
-	protected String getFromURL(String url) throws ClientProtocolException,
-			IOException {
-				HttpClient client = new DefaultHttpClient();
-				HttpGet request = new HttpGet(url);
-				HttpResponse response = client.execute(request);
+	protected String getFromURL(String target) throws IOException {
+		URL url = new URL(target);
+		URLConnection conn = url.openConnection();
+		conn.setDoOutput(true);
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		StringBuilder str = new StringBuilder();
+		String line = null;
 			
-				InputStream in = response.getEntity().getContent();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-				StringBuilder str = new StringBuilder();
-				String line = null;
-				while((line = reader.readLine()) != null) {
-				    str.append(line);
-				}
-				in.close();
-				return str.toString();
-			}
+		while ((line = reader.readLine()) != null) {				
+		    str.append(line);
+		}
+		
+		return str.toString();
+	}
+	
+	public abstract Object execute();
 
 }
