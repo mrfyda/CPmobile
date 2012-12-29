@@ -1,5 +1,5 @@
-CORE_FILES = `ls src/cpmobile/core/*.java`
-TEST_FILES = `ls src/cpmobile/test/*.java`
+CORE_FILES = `find src/cpmobile/core/ -name '*.java'`
+TEST_FILES = `find src/cpmobile/test/ -name '*.java'`
 BIN_DIR = bin
 DATA_DIR = data
 CLASSPATH = bin/:src/:lib/junit-4.11.jar
@@ -14,6 +14,7 @@ build:
 clean:
 	rm -rf $(BIN_DIR)/*;
 	rm -f $(DATA_DIR)/db.dat;
+
 test:
 	clear;
 	java -cp $(CLASSPATH) cpmobile.test.RunTest;
