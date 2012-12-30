@@ -8,7 +8,7 @@ import cpmobile.core.Station;
 public class StationsRetriever extends WebService {
 	private static final String STATIONS_URL = "http://cp.pt/cp/getStations.do";
 
-	public List<Station> execute() {
+	public List<Station> execute(String... strings) {
 		try {
 			List<Station> list = new ArrayList<Station>();
 			String r = getFromURL(STATIONS_URL);

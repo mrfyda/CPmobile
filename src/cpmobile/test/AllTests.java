@@ -4,7 +4,6 @@ import java.util.List;
 import cpmobile.core.*;
 import cpmobile.core.web.StationsRetriever;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.After;
@@ -18,11 +17,11 @@ public class AllTests {
 	static CPManager manager;
 	long before;
 	
-	@BeforeClass
+	/*@BeforeClass
 	public static void init() {
 		if ((manager = CPManager.loadDB(FILE)) == null)
 			manager = CPManager.createDB(STATION, FILE);
-	}
+	}*/
 
 	@Before
 	public void testSetup() {		
@@ -41,26 +40,36 @@ public class AllTests {
 		
 		assertNotNull(CPManager.createDB(station, file));
 	}*/
-	
+
 	/*@Test
 	public void testLoadDB() {
 		final String file = "data/database.dat";
 		
 		assertNotNull(CPManager.loadDB(file));
 	}*/
-
-	@Test
+	
+	/*@Test
 	public void testSimpleQuery() {
 		System.out.println("TestSimpleQuery");
 		List<List<String>> lst = manager.query("Entroncamento", "Santarem", "R", 0, "");
 		
 		assertNotNull(lst);
 		assertEquals(20, lst.size());
+	}*/
+	
+	@Test
+	public void TestCPManager() {
+		System.out.println("TestCPManager");
+		CPManager cm = new CPManager();
+		cm.clean();
+		//cm.update();
+		
+		assertNotNull(cm);
 	}
 	
 	@Test
-	public void TestWebService() {
-		System.out.println("TestWebService");
+	public void TestStationsRetriever() {
+		System.out.println("TestStationsRetriever");
 		StationsRetriever sr = new StationsRetriever();
 		List<Station> stations = sr.execute();
 		
@@ -68,10 +77,15 @@ public class AllTests {
 		assertEquals("abrantes", stations.get(0).getName());
 		assertEquals("zibreira", stations.get(stations.size()-1).getName());
 	}
-
+	
 	@Test
-	public void testComplexQuery() {
-		System.out.println("TestComplexQuery");
-
+	public void TestRoutesRetriever() {
+		System.out.println("TestRoutesRetriever");
+		Station s1 ,s2;
+		s1 = new Station("Entroncamento");
+		s2 = new Station("Oriente");
+		
+		System.out.println("sas");
+		System.out.println(RoutesManager.createRoute(s1, s2));
 	}
 }

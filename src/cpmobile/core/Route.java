@@ -50,7 +50,7 @@ public final class Route implements Serializable {
 	// Returns true if t1 is equal or included in t2
 	// false if otherwise
 	private boolean compareType(String t1, String t2) {
-		return (t2.equals(CPManager.TYPE_ALL)) || (t1.equals(t2));
+		return (t2.equals(Train.TYPE_ALL)) || (t1.equals(t2));
 	}
 
 	// Performs a search for a specific type and a specific date of departure

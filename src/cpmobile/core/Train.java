@@ -7,6 +7,12 @@ public final class Train implements Serializable {
 	
 	private static final long serialVersionUID = 3629626263929217422L;
 	
+	public static final String TYPE_ALL = "";
+	public static final String TYPE_ALFA = "AP";
+	public static final String TYPE_IC = "IC";
+	public static final String TYPE_R = "R";
+	public static final String TYPE_U = "U";
+	
 	private String _type;
 	private String _timeDepart;
 	private String _timeArrival;
@@ -56,5 +62,13 @@ public final class Train implements Serializable {
 		}
 		
 		return false;
+	}
+	
+	public boolean isValid() {
+		return (_type != null) && (_type.equals(Train.TYPE_ALL) || 
+				_type.contains(Train.TYPE_ALFA) || 
+				_type.contains(Train.TYPE_IC) || 
+				_type.contains(Train.TYPE_R) || 
+				_type.contains(Train.TYPE_U));
 	}
 }
